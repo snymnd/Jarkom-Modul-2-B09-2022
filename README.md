@@ -1,4 +1,4 @@
-# Jarkom-Modul-1-B09-2022
+# Jarkom-Modul-2-B09-2022
 
 ### Anggota Kelompok
 | Nama                 | NRP        |
