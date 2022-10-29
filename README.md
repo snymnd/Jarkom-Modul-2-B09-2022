@@ -82,7 +82,7 @@ iface eth0 inet static
 
 
 
-## No 1
+### No 1
 Setelah melakukan konfigurasi pada topologi kita lakukan restart node pada topologi.
 ![image](https://user-images.githubusercontent.com/99454377/198836299-00dfc366-a40f-44b2-ae63-3996b26fc4d8.png)
 
@@ -97,7 +97,7 @@ iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE -s 192.177.0.0/16
 kemudian kita coba apakah sudah terkoneksi dengan internet dengan mencoba ping ke `google.com`
 ![image](https://user-images.githubusercontent.com/99454377/198833476-45b29a39-1c4f-45d4-83eb-ee54ed763e1f.png)
 
-## No 2
+### No 2
 Membuat website utama `wise.b09.com` dengan alias `www.wise.b09.com`
 
 Dimulai dengan membuat file direktori untuk menyimpan
@@ -138,7 +138,7 @@ host -t A www.wise.b09.com
 ![image](https://user-images.githubusercontent.com/99454377/198835117-78d8b47d-824d-4ba8-9acf-88ff2e5c902e.png)
 
 
-## No 3
+### No 3
 Membuat subdomain `eden.wise.b09.com` dan server alias `www.eden.wise.b09.com`
 
 ```
@@ -160,7 +160,7 @@ host -t A www.eden.wise.b09.com
 ```
 ![image](https://user-images.githubusercontent.com/99454377/198835440-fe8bb9a3-1067-4eb2-aa27-7122a735976a.png)
 
-## No 4
+### No 4
 Membuat reverse domain untuk domain utama.
 ```
 zone "3.177.192.in-addr.arpa" {
@@ -175,7 +175,7 @@ host -t PTR 192.177.3.2
 ```
 ![image](https://user-images.githubusercontent.com/99454377/198835787-914b452a-7a3b-4117-9b3b-1cb6317e0ea4.png)
 
-## No 5
+### No 5
 Membuat `berlint` sebagai DNS Slave
 
 Membuat zone konfigurasi
@@ -199,6 +199,175 @@ Kemudian kita testing `ping wise.b09.com`
 
 Masih terkoneksi ke internet sehingga DNS Slave berhasil.
 
+### 6.  Karena banyak informasi dari Handler, buatlah subdomain yang khusus untuk operation yaitu operation.wise.yyy.com dengan alias www.operation.wise.yyy.com
+
+- Buat directory ``operation`` pada folder `/etc/bind` dengan  
+```bash 
+mkdir /etc/bind/operation
+```
+- selanjutnya tambahkan configurasi berikut pada file `operation.wise.b09.com` folder yang telah dibuat.
+![image](https://user-images.githubusercontent.com/70748569/198837494-b941e223-c4de-4e9d-ad7d-1bde804061f6.png)
+
+- Pada wise tambahkan configrasi zone berikut ke ``/etc/bind/named.conf.local`` 
+```bash
+zone "operation.wise.b09.com" {
+// delegasi dns ke berlint soal 6
+    type master;
+    allow-transfer { 192.177.2.2; }; // IP Berlint
+    file "/etc/bind/operation/operation.wise.b09.com";
+};
+```
+seperti berikut:
+![image](https://user-images.githubusercontent.com/70748569/198837525-e6f25266-69f0-43f5-8fbf-a2cc11b42e70.png)
+
+
+- Buat directory ``delegasi`` pada folder `/etc/bind` dengan  berlint
+```bash 
+mkdir /etc/bind/delegasi
+```
+- selanjutnya tambahkan configurasi berikut pada file `operation.wise.b09.com` folder yang telah dibuat untuk mendapatkal delegasi atas subdomain `operation` dan menambahkan alias `www.operation`.
+![image](https://user-images.githubusercontent.com/70748569/198837542-79f22671-3633-4eb3-a4f6-3ffc1104b7e6.png)
+
+- Lakukan configurasi berikut di `/etc/bind/named.conf.local` pada berlint
+```bash 
+zone "operation.wise.b09.com" {
+// delegasi untuk no 6
+    type master;
+    file "/etc/bind/delegasi/operation.wise.b09.com";
+};
+``` 
+- Berikut hasil testing pada SSS
+![image](https://user-images.githubusercontent.com/70748569/198837562-d095a292-900e-4335-91a6-647ae0dffef6.png)
+
+
+### 7. Untuk informasi yang lebih spesifik mengenai Operation Strix, buatlah subdomain melalui Berlint dengan akses strix.operation.wise.yyy.com dengan alias www.strix.operation.wise.yyy.com yang mengarah ke Eden
+- Pada berlint, tambahkan konfigurasi berikut di `/etc/bind/delegasi/operation.wise.b09.com` untuk membuat subdomain `strix.operation` serta alias  `www.strix.operation`
+![image](https://user-images.githubusercontent.com/70748569/198837584-d566a9ce-539f-4630-b063-36e27a7e61aa.png)
+
+- berikut hasil testing pada SSS
+![image](https://user-images.githubusercontent.com/70748569/198837725-89641abd-d35e-45e6-a78e-6662f90020a2.png)
+
+
+### 8. Pertama dengan webserver www.wise.yyy.com. Pertama, Loid membutuhkan webserver dengan DocumentRoot pada /var/www/wise.yyy.com
+Buat webserver pada wise, karena domain `wise.b09.com` mengarah ke IP wise.
+- Install dependency yang dibutuhkan
+```bash 
+apt-get install apache2 -y
+apt-get install php -y
+apt-get install libapache2-mod-php7.0
+
+apt-get install wget -y
+apt-get install unzip -y
+```
+- Download resource wise yang ada pada soal shift dengan `wget` lalu unzip isi zip file dengan `unzip` lalu pindah hasil unzip kan pada folder berikuut `/var/www/wise.b09.com` seperti berikut
+```bash
+wget https://drive.google.com/uc?id=1S0XhL9ViYN7TyCj2W66BNEXQD2AAAw2e -O wise.zip
+unzip wise.zip 
+
+mv wise /var/www/wise.b09.com
+```  
+- Tambahkan configurasi berikut di `/etc/apache2/sites-available/wise.b09.com.conf` 
+```bash 
+<VirtualHost *:80>
+
+        #ServerName www.example.com
+
+        ServerAdmin webmaster@localhost
+        DocumentRoot /var/www/wise.b09.com
+        ServerName wise.b09.com
+        ServerAlias www.wise.b09.com
+
+        #LogLevel info ssl:warn
+
+        ErrorLog ${APACHE_LOG_DIR}/error.log
+        CustomLog ${APACHE_LOG_DIR}/access.log combined
+        #Include conf-available/serve-cgi-bin.conf
+</VirtualHost>
+
+# vim: syntax=apache ts=4 sw=4 sts=4 sr noet
+```
+- Lalu jalankan  `a2ensite wise.b09.com` dan `service apache2 restart` untuk menjalankan webserver pada domain tersebut
+- Berikut hasil testing pada sss yang sudah menginstall `lynx` dengan perintah ``lynx wise.b09.com``
+![image](https://user-images.githubusercontent.com/70748569/198837759-a349850b-0d34-481b-bfac-9c6984bdcf28.png)
+
+
+### 9 Setelah itu, Loid juga membutuhkan agar url www.wise.yyy.com/index.php/home dapat menjadi menjadi www.wise.yyy.com/home
+- Buat alias dengan menambahakan code berikut pada  `/etc/apache2/sites-available/wise.b09.com.conf` 
+```bash
+<VirtualHost *:80>
+
+        #ServerName www.example.com
+
+        ServerAdmin webmaster@localhost
+        DocumentRoot /var/www/wise.b09.com
+        ServerName wise.b09.com
+        ServerAlias www.wise.b09.com
+
+        # no 9
+        Alias "/home" "/var/www/wise.b09.com/index.php/home"
+        #LogLevel info ssl:warn
+
+        ErrorLog ${APACHE_LOG_DIR}/error.log
+        CustomLog ${APACHE_LOG_DIR}/access.log combined
+        #Include conf-available/serve-cgi-bin.conf
+</VirtualHost>
+
+# vim: syntax=apache ts=4 sw=4 sts=4 sr noet
+```
+- Testing pada SSS dengan menjalankan `lynx www.wise.b09.com/home`
+
+![image](https://user-images.githubusercontent.com/70748569/198837791-7ff78a1e-b073-455e-8a01-3a96a8ee8d0b.png)
+
+![image](https://user-images.githubusercontent.com/70748569/198837799-e84312a4-0467-4db2-9b97-beb4e87e9685.png)
+
+
+### 10 pada subdomain www.eden.wise.yyy.com, Loid membutuhkan penyimpanan aset yang memiliki DocumentRoot pada /var/www/eden.wise.yyy.com
+
+Buat webserver pada eden, karena domain `eden.wise.b09.com` mengarah ke IP eden.
+- Install dependency yang dibutuhkan
+```bash 
+apt-get install apache2 -y
+apt-get install php -y
+apt-get install libapache2-mod-php7.0
+
+apt-get install wget -y
+apt-get install unzip -y
+```
+- Download resource wise yang ada pada soal shift dengan `wget` lalu unzip isi zip file dengan `unzip` lalu pindah hasil unzip kan pada folder berikuut `/var/www/wise.b09.com` seperti berikut
+```bash
+wget https://drive.google.com/uc?id=1q9g6nM85bW5T9f5yoyXtDqonUKKCHOTV -O eden.zip
+unzip eden.zip 
+
+mv eden.wise /var/www/eden.wise.b09.com
+```  
+- Tambahkan configurasi berikut di `/etc/apache2/sites-available/eden.wise.b09.com.conf` 
+```bash 
+<VirtualHost *:80>
+
+        #ServerName www.example.com
+
+        ServerAdmin webmaster@localhost
+        DocumentRoot /var/www/eden.wise.b09.com
+        ServerName eden.wise.b09.com
+        ServerAlias eden.www.wise.b09.com
+        
+        #LogLevel info ssl:warn
+
+        ErrorLog ${APACHE_LOG_DIR}/error.log
+        CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+        #Include conf-available/serve-cgi-bin.conf
+</VirtualHost>
+
+# vim: syntax=apache ts=4 sw=4 sts=4 sr noet
+```
+- Lalu jalankan  `a2ensite wise.b09.com` dan `service apache2 restart` untuk menjalankan webserver pada domain tersebut
+- Berikut hasil testing pada sss dengan perintah 
+-- saat menjalankan ``lynx eden.wise.b09.com``
+![image](https://user-images.githubusercontent.com/70748569/198837822-466f72dd-3abe-484d-b616-7867de13d2fb.png)
+
+-- saat menjalankan ``lynx www.eden.wise.b09.com``
+![image](https://user-images.githubusercontent.com/70748569/198837827-ed0bb0a8-f2d1-4672-97bc-fa487222d223.png)
 
 ### 11. Akan tetapi, pada folder /public, Loid ingin hanya dapat melakukan directory listing saja
 
