@@ -160,7 +160,7 @@ host -t A www.eden.wise.b09.com
 ```
 ![image](https://user-images.githubusercontent.com/99454377/198835440-fe8bb9a3-1067-4eb2-aa27-7122a735976a.png)
 
-## Soal 4
+## No 4
 Membuat reverse domain untuk domain utama.
 ```
 zone "3.177.192.in-addr.arpa" {
