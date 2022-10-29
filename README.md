@@ -90,7 +90,7 @@ Listen 15500
         Listen 443
 </IfModule>
 ```
-agar hanya dapat diakses oleh port 15000 dan 15500,untuk pengecekannya dapat memasukkan ping strix.operation.wise.b09.com atau IP Eden `192.177.2.3:15000` dan `192.177.2.3:15500` yang nantinya akan muncul tampilan seperti dibawah
+agar hanya dapat diakses oleh port 15000 dan 15500,untuk pengecekannya dapat memasukkan ping strix.operation.wise.b09.com atau IP Eden pada node SSS `lynx 192.177.2.3:15000` dan `lynx 192.177.2.3:15500` yang nantinya akan muncul tampilan seperti dibawah
 
 ![image](https://user-images.githubusercontent.com/92217354/198835456-59f95d9d-9a50-4f36-8dac-eb8ca35e6d04.png)
 
